@@ -15,7 +15,7 @@ d'aquest fitxer.
 Aparentment, les webs anteriors no presenten les dificultats trobades a la proposta present
 
 ## Web Scraper de sites amb informació sobre lloguers d'habitatges
-##Context
+## Context
 La idea d'aquest Web Scraper és la d'obtenir un Dataset d'informació sobre lloguers d'habitatges a la zona de Barcelona i rodalies.
 
 Inicialment es plantejarà el scraping d'alguna de les webs més populars al respecte (Fotocasa, habitaclia, Idealista). 
@@ -23,17 +23,17 @@ Aquests llocs web representen un percentatge molt gran del mercat de lloguer a B
 l'scraping parcial de qualsevol d'aquests sites ja pot permetre la generació d'un Dataset amb prou informació 
 per fer estudis interessants sobre el mercat del lloguer en el context de Barcelona i rodalies.
 
-##Títol
+## Títol
 Habitatges en règim de lloguer a l'àrea de Barcelona
 
-##Descripció del Dataset
+## Descripció del Dataset
 Llistat d’habitatges en règim de lloguer als municipis de l’àrea de Barcelona (Barcelona i rodalies) 
 per poder fer estudis comparatius segons diferents criteris
 
-##Representació gràfica
+## Representació gràfica
 TODO
 
-##Camps
+## Camps
 
 - Municipi: El municipi / població on està localitzat el habitatge
 - Barri: Barri o districte (per ciutats grans com Barcelona).
@@ -53,16 +53,16 @@ Aquesta llista és provisoinal. Algns camps poden no aparèixer a la versió fin
 d'afegir un identificador de l'habitatge, un camp PreuInicial i dates de creació / modificació que podrien aportar informació interessant de cara 
 a un anàlisi evolotiu de preus més acurat.
 
-##Agraïments
+## Agraïments
 TODO
 
-##Inspiració / possibles aplicacions
+## Inspiració / possibles aplicacions
 1. Estudi de diferències de preu / m2 entre municipis (barris, districtes, zones, carrers). Tamnbé antiguitat, etc, ...
 2. Evolució preu / m2 (en el context de vàries extraccions en diferents moments) classificant per municipi, antiguitat, etc
 3. Increment mig de preu en els habitatges que disposen de parking i/o altres criteris
 4. (...)
 
-##Dubtes / Dificultats
+## Dubtes / Dificultats
 Hem trobat que les webs objectiu, després d'unra primera inspecció, presenten impediments a nivell de robots.txt. Unes primeres proves a nivell de codi
 ens han fet veure que son "scrapejables" però amb algunes dificultats (cal, per exemple, dependre d'intereracció manual per superar alguna prova CAPTCHA)
 
