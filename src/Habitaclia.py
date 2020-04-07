@@ -21,8 +21,6 @@ class HabitacliaScraper():
         # Scraping para el resto de índices (según la paginación)
         i = 1
         while i < self.total_index_pages:
-            if i == 16:
-                return # <- TODO: Quitar!
             url_to_scrap = self.get_url_to_scrap_by_index(i)
             self.scrap_index_page(url_to_scrap)
             i += 1;
