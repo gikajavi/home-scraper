@@ -1,21 +1,15 @@
-# TODO:
-# OK 1. Algun error per cas detectat com "Oportunitat" on alguna dada canvia
-#       Veure (per reproduir): https://www.habitaclia.com/alquiler-piso-via_augusta_349_355_via_augusta_349_355_sarria-barcelona-i672001759190.htm?f=&geo=p&from=list&lo=55
-# 2. Millorar descarregar per si haguès problemes repetir fins a n cops amb diferents delays
-# OK  3. Convertir la llista a csv i volcar
-# * Opcional:
-# - guardar resultats per obtenir preus nous i preus passats
-
-import datetime
 import random
-import urllib.request
 from bs4 import BeautifulSoup
+from log_helper import LogHelper
+from http_helper import HttpHelper
 
 class HabitacliaScraper():
     def __init__(self):
         self.url = "https://www.habitaclia.com/alquiler-barcelona.htm"
         self.dataset = []
         self.session_id = "sess-" + str(random.random())
+        self._log_helper = LogHelper("./logs/log-" + self.session_id)
+        self._http_helper = HttpHelper(self._log_helper, 5, 2)
         self._log("Habitaclia Scraper Iniciado")
 
     def start(self):
@@ -27,7 +21,9 @@ class HabitacliaScraper():
         # Scraping para el resto de índices (según la paginación)
         i = 1
         while i < self.total_index_pages:
-            url_to_scrap = self.def_get_url_to_scrap_by_index(i)
+            if i == 16:
+                return # <- TODO: Quitar!
+            url_to_scrap = self.get_url_to_scrap_by_index(i)
             self.scrap_index_page(url_to_scrap)
             i += 1;
 
@@ -261,34 +257,16 @@ class HabitacliaScraper():
         last_page = last_page_tag.select("a")[0].text
         return last_page
 
-
     def _descargar_indice(self):
         html = self._descargar_url(self.url)
         return html
 
-    def _descargar_url(self, url):
-        self._log('.....Descargando ' + url)
-        try:
-            response = urllib.request.urlopen(url)
-            html = response.read()
-        except Exception as inst:
-            self._log("ERROR: " + inst)
-            # TODO: Mejorar el código para permitir repeticiones con retrasos random
-            return False
-
-        self._log('- OK -')
-        return html
-
     def _log(self, s):
-        s = str(datetime.datetime.now()) + ': ' + s
-        print(s)
-        path = "./logs/log-" + self.session_id
-        self._file_put_contents(path, s + "\r\n")
+        self._log_helper.write(s)
 
-    def _file_put_contents(self, path, contents):
-        f = open(path, "a")
-        f.write(contents)
-        f.close()
+    def _descargar_url(self, url):
+        html = self._http_helper.get(url)
+        return html
 
     def write_to_csv(self, filename):
         self._log('Escribiendo CSV en ' + filename + '...')
@@ -306,8 +284,3 @@ class HabitacliaScraper():
         f.close()
         self._log('- OK -')
 
-
-    # for i in range(len(self.data)):
-    #     for j in range(len(self.data[i])):
-    #         file.write(self.data[i][j] + ";")
-    #     file.write("\n")
