@@ -21,8 +21,8 @@ class HttpHelper():
             response = urllib.request.urlopen(url, None, 10)
             html = response.read()
             self.log.write('- OK -')
-        except Exception as inst:
-            self.log.write("Error en HttpHelper._get " + str(inst))
+        except Exception as ex:
+            self.log.write("Error en HttpHelper._get " + str(ex))
             if attempt < self.max_attempts:
                 return self._get(url, attempt + 1)
             self.log.write("Error__ Abortada descarga de " + url + " tras " + str(attempt) + " intentos")
