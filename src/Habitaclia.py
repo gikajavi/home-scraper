@@ -1,3 +1,11 @@
+# TODO:
+# OK 1. Algun error per cas detectat com "Oportunitat" on alguna dada canvia
+#       Veure (per reproduir): https://www.habitaclia.com/alquiler-piso-via_augusta_349_355_via_augusta_349_355_sarria-barcelona-i672001759190.htm?f=&geo=p&from=list&lo=55
+# 2. Millorar descarregar per si haguès problemes repetir fins a n cops amb diferents delays
+# OK  3. Convertir la llista a csv i volcar
+# * Opcional:
+# - guardar resultats per obtenir preus nous i preus passats
+
 import datetime
 import random
 import urllib.request
@@ -6,7 +14,7 @@ from bs4 import BeautifulSoup
 class HabitacliaScraper():
     def __init__(self):
         self.url = "https://www.habitaclia.com/alquiler-barcelona.htm"
-        self.data = []
+        self.dataset = []
         self.session_id = "sess-" + str(random.random())
         self._log("Habitaclia Scraper Iniciado")
 
@@ -54,8 +62,7 @@ class HabitacliaScraper():
         # Se obtienen de la sección "summary"
         municipi = 'Barcelona'
         barri = parser.select("article.location h4 a")[0].text.strip()
-        preuactual: str = parser.select(".summary .price span")[0].text.strip()
-        preuactual = preuactual.replace('€', '').replace('.', '').strip()
+        preuactual = self._get_precio(parser)
         superficie = self._get_superficie(html, parser)
         habitaciones = self._get_habitaciones(html, parser)
         baños = self._get_baños(html, parser)
@@ -72,9 +79,9 @@ class HabitacliaScraper():
         aire_acondicionat = 'No'
         if self._general_feature_exists("Aire acondicionado", parser):
             aire_acondicionat = 'Sí'
-        Moblat = 'Sí'
+        moblat = 'Sí'
         if self._general_feature_exists("Sin amueblar", parser):
-            Moblat = 'No'
+            moblat = 'No'
         # Etiquetat eficiència energètica i d'emissions
         eti_consum = self._get_eti_eficiencia(parser)
         eti_emissions = self._get_eti_emissions(parser)
@@ -93,7 +100,7 @@ class HabitacliaScraper():
         r['Tipus'] = tipus
         r['Municipi'] = municipi
         r['Barri'] = barri
-        r['Preu Actual'] = preuactual
+        r['Preu Actual (€)'] = preuactual
         r['Superfície (m2)'] = superficie
         r['#Habitacions'] = habitaciones
         r['#Banys'] = baños
@@ -102,12 +109,12 @@ class HabitacliaScraper():
         r['Parking'] = parking
         r['Calefacció'] = calefaccio
         r['Aire acondicionat'] = aire_acondicionat
-        r['Moblat'] = Moblat
+        r['Moblat'] = moblat
         r['Eficiència energètica'] = eti_consum
         r['Classe emissions'] = eti_emissions
         r['Jardi'] = jardi
         r['Ascensor'] = ascensor
-        self.data.append(r.copy())
+        self.dataset.append(r.copy())
         return
 
 
@@ -213,9 +220,14 @@ class HabitacliaScraper():
             return 'atico'
         return 'otros'
 
+    def _get_precio(self, parser: BeautifulSoup):
+        s = parser.select(".summary .price span[itemprop=price]")[0].text.strip()
+        s = s.replace('€', '').replace('.', '').strip()
+        return s;
 
     def _get_superficie(self, html: str, parser: BeautifulSoup):
         s = self._get_feature(html, parser, 'm2')
+        s = s.lower().replace('desde', '').strip()
         return s
 
     def _get_habitaciones(self, html: str, parser: BeautifulSoup):
@@ -255,12 +267,15 @@ class HabitacliaScraper():
         return html
 
     def _descargar_url(self, url):
-        self._log('.............................Descargando ' + url)
+        self._log('.....Descargando ' + url)
         try:
             response = urllib.request.urlopen(url)
             html = response.read()
         except Exception as inst:
             self._log("ERROR: " + inst)
+            # TODO: Mejorar el código para permitir repeticiones con retrasos random
+            return False
+
         self._log('- OK -')
         return html
 
@@ -268,16 +283,31 @@ class HabitacliaScraper():
         s = str(datetime.datetime.now()) + ': ' + s
         print(s)
         path = "./logs/log-" + self.session_id
-        self._file_put_contents(path, s)
+        self._file_put_contents(path, s + "\r\n")
 
     def _file_put_contents(self, path, contents):
         f = open(path, "a")
         f.write(contents)
         f.close()
 
-    def data2csv(self, filename):
-        file = open("../csv/" + filename, "w+")
-        for i in range(len(self.data)):
-            for j in range(len(self.data[i])):
-                file.write(self.data[i][j] + ";")
-            file.write("\n")
+    def write_to_csv(self, filename):
+        self._log('Escribiendo CSV en ' + filename + '...')
+        f = open(filename, "w+")
+        hdr_written = False
+        for d in self.dataset:
+            if not hdr_written:
+                for k in d:
+                    f.write(k + ";")
+                f.write("\n")
+                hdr_written = True
+            for k in d:
+                f.write(d[k] + ";")
+            f.write("\n")
+        f.close()
+        self._log('- OK -')
+
+
+    # for i in range(len(self.data)):
+    #     for j in range(len(self.data[i])):
+    #         file.write(self.data[i][j] + ";")
+    #     file.write("\n")
