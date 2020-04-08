@@ -1,22 +1,26 @@
 import pandas as pd
-from time import sleep
-import logging
 import random
-import requests
+import log_helper
+import http_helper
 from bs4 import BeautifulSoup
-
 
 class HabitacliaScraper():
     def __init__(self):
         self.url = "https://www.habitaclia.com/alquiler-en-garraf.htm"
-        self.dataset = []
         self.session_id = "sess-" + str(random.random())
-        logging.basicConfig(filename='log.log', filemode='w', format='%(asctime)-15s - %(name)s - %(levelname)s - %(message)s'format=self._FORMAT)
-        self._logger = logging.getLogger('scrapper')
+        self._data = pd.DataFrame()
+        self._logger = log_helper.LogHelper("./logs/log-" + self.session_id, 'scraper', True)
+        self._http_client = http_helper.HttpHelper(self._logger, 5, 2)
         self._logger.info("Habitaclia Scraper Iniciado")
 
     def start(self):
-        self._data = pd.concat([self.scrap_index_page(self.get_url_to_scrap_by_index(i)) for i in range(0,int(self._get_total_index_pages(self._descargar_indice())))])
+        html_code = self._descargar_indice()
+        self.total_index_pages = int(self._get_total_index_pages(html_code))
+        i = 0
+        while i < self.total_index_pages:
+            url_to_scrap = self.get_url_to_scrap_by_index(i)
+            self.scrap_index_page(url_to_scrap)
+            i += 1;
 
     def get_url_to_scrap_by_index(self, index):
         if index == 0:
@@ -31,8 +35,9 @@ class HabitacliaScraper():
             html = self._descargar_url(url)
             parser = BeautifulSoup(html, 'html.parser')
             links = parser.select(".list-item-title a")
-            return(pd.concat(self.scrap_data_page(link['href'])for link in links))
-                
+            for link in links:
+                self.scrap_data_page(link['href'])
+
         except Exception as ex:
             self._logger.error("Error en el index scraping " + str(ex))
 
@@ -88,7 +93,7 @@ class HabitacliaScraper():
             if self._community_feature_exists("Ascensor", parser):
                 ascensor = True
 
-            return(pd.DataFrame({'Id': housing_id,
+            df_row = pd.DataFrame({'Id': housing_id,
                                  'Url': url,
                                  'Tipus': tipus,
                                  'Municipi': municipi,
@@ -106,7 +111,8 @@ class HabitacliaScraper():
                                  'Eficiència energètica': eti_consum,
                                  'Classe emissions': eti_emissions,
                                  'Jardi': jardi,
-                                 'Ascensor': ascensor}, index = [0]))
+                                 'Ascensor': ascensor}, index = [0])
+            self._data = self._data.append(df_row, ignore_index=True)
             
         except Exception as ex:
             self._logger.error("Error en el data scraping " + str(ex))
@@ -324,16 +330,13 @@ class HabitacliaScraper():
         return html
 
     def _descargar_url(self, url):
-        sleep(random.random() * 3)
-        response = requests.get(url)
-        # add retries if response code is not allowed
-        html = response.text
+        html = self._http_client.get(url)
         return html
 
     def write_to_csv(self, filename):
         self._logger.info('Escribiendo CSV en ' + filename + '...')
         try:
-            self._data.to_csv(filename)
+            self._data.to_csv(filename, ';',  encoding="UTF-16LE")
         except Exception as ex:
             self._logger.error("No es posible guardar los datos en un csv." + str(ex))
             

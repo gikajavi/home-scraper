@@ -1,19 +1,25 @@
 import datetime
+import logging
 
 class LogHelper():
-    def __init__(self, path):
-        self.path = path
+    def __init__(self, path='log.log', name="log", stdout: bool=False):
+        self._stdout = stdout
+        logging.basicConfig(filename=path, filemode='w+', format='%(asctime)-15s - %(name)s - %(levelname)s - %(message)s')
+        self._logger = logging.getLogger(name)
 
-    def write(self, s: str):
-        s = str(datetime.datetime.now()) + ': ' + s
-        self.write_raw(s)
+    def info(self, s: str):
+        self._logger.info(s)
+        self.stdout_print(s)
 
-    def write_raw(self, s: str):
-        print(s)
-        self._file_put_contents(self.path, s + "\n")
+    def warning(self, s: str):
+        self._logger.warning(s)
+        self.stdout_print(s)
 
-    def _file_put_contents(self, path, contents):
-        f = open(path, "a")
-        f.write(contents)
-        f.close()
+    def error(self, s: str):
+        self._logger.error(s)
+        self.stdout_print(s)
 
+    def stdout_print(self, s):
+        if self._stdout:
+            s = str(datetime.datetime.now()) + ': ' + s
+            print(s)
