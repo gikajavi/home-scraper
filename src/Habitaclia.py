@@ -6,27 +6,32 @@ from bs4 import BeautifulSoup
 
 class HabitacliaScraper():
     def __init__(self):
-        self.url = "https://www.habitaclia.com/alquiler-en-garraf.htm"
-        self.session_id = "sess-" + str(random.random())
+        self._current_url = ""
+        self._session_id = "sess-" + str(random.random())
         self._data = pd.DataFrame()
-        self._logger = log_helper.LogHelper("./logs/log-" + self.session_id, 'scraper', True)
+        self._logger = log_helper.LogHelper("./logs/log-" + self._session_id, 'scraper', True)
         self._http_client = http_helper.HttpHelper(self._logger, 5, 2)
         self._logger.info("Habitaclia Scraper Iniciado")
 
-    def start(self):
+    def start(self, urls_index_list):
+        for url_index in urls_index_list:
+            self._start(url_index)
+
+    def _start(self, url):
+        self._current_url = url
         html_code = self._descargar_indice()
         self.total_index_pages = int(self._get_total_index_pages(html_code))
         i = 0
         while i < self.total_index_pages:
             url_to_scrap = self.get_url_to_scrap_by_index(i)
             self.scrap_index_page(url_to_scrap)
-            i += 1;
+            i += 1
 
     def get_url_to_scrap_by_index(self, index):
         if index == 0:
-            return self.url
+            return self._current_url
         else:
-            to_scrap = self.url
+            to_scrap = self._current_url
             return to_scrap.replace('.htm', "-" + str(index) + '.htm')
 
     def scrap_index_page(self, url):
@@ -53,13 +58,19 @@ class HabitacliaScraper():
 
             html = self._descargar_url(url)
             parser = BeautifulSoup(html, 'html.parser')
+
             if self._inmueble_no_disponible(parser):
                 self._logger.warning('El servidor indicó "inmueble no disponible". Se aborta la página')
                 return
 
             # Se obtienen de la URL
             housing_id = self._get_housing_id_by_url(url)
-            tipus = self._get_housing_type_by_url(url)
+            tipus_immoble = self._get_housing_type_by_url(url)
+            tipus_oferta = self._get_offer_type_by_url(url)
+            # Alguns links no són dels tipus suportats (lloguer i/o vivenda). Acostumen a ser promocions posades al final de la llista que apareixen com a ofertes "normalitzades" en altre punts
+            if tipus_oferta.lower() != 'lloguer' and tipus_oferta.lower() != 'venda':
+                self._logger.warning('El link en proceso no resultó ser compra o alquiler. Se aborta la página')
+                return
 
             # Se obtienen de la sección "summary"
             municipi = self._get_municipio(parser)
@@ -87,7 +98,8 @@ class HabitacliaScraper():
 
             df_row = pd.DataFrame({'Id': housing_id,
                                  'Url': url,
-                                 'Tipus': tipus,
+                                 'Tipus Oferta': tipus_oferta,
+                                 'Tipus Immoble': tipus_immoble,
                                  'Municipi': municipi,
                                  'Provincia': provincia,
                                  'Zona': zona,
@@ -233,17 +245,30 @@ class HabitacliaScraper():
             self._logger.error("Error obteniendo el Id de la oferta " + str(ex) + " Se aborta el scraping de esta URL")
             raise
 
+    def _get_offer_type_by_url(self, url):
+        try:
+            l = url.split('/')
+            suff: str = str(l[3]).lower()
+            if suff.startswith('alquiler-'):
+                return 'Lloguer'
+            if suff.startswith('comprar-'):
+                return 'Venda'
+            return 'altres'
+        except Exception as ex:
+            self._logger.error("Error obteniendo el tipo de oferta " + str(ex) + " Se aborta el scraping de esta URL")
+            raise
+
     def _get_housing_type_by_url(self, url):
         try:
             l = url.split('/')
             suff: str = str(l[3]).lower()
-            if suff.startswith('alquiler-piso') or suff.startswith('alquiler-apartamento'):
+            if suff.startswith('alquiler-piso') or suff.startswith('alquiler-apartamento') or suff.startswith('comprar-piso') or suff.startswith('comprar-apartamento'):
                 return 'piso'
-            if suff.startswith('alquiler-casa'):
+            if suff.startswith('alquiler-casa') or suff.startswith('comprar-casa'):
                 return 'casa'
-            if suff.startswith('alquiler-duplex'):
+            if suff.startswith('alquiler-duplex') or suff.startswith('comprar-duplex'):
                 return 'duplex'
-            if suff.startswith('alquiler-atico'):
+            if suff.startswith('alquiler-atico') or suff.startswith('comprar-atico'):
                 return 'atico'
             return 'otros'
         except Exception as ex:
@@ -281,7 +306,7 @@ class HabitacliaScraper():
             s = parser.select("article.location h4 a")[0].text.strip()
             return s
         except Exception as ex:
-            self._logger.error("Error obtniendo la zona por article.location. Se intenta con id_buscador " + str(ex))
+            self._logger.error("Error obteniendo la zona por article.location. Se intenta con id_buscador " + str(ex))
             s = self._get_zona_by_buscador_input(parser)
             return s
 
@@ -355,7 +380,7 @@ class HabitacliaScraper():
         return last_page
 
     def _descargar_indice(self):
-        html = self._descargar_url(self.url)
+        html = self._descargar_url(self._current_url)
         return html
 
     def _descargar_url(self, url):
