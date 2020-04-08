@@ -53,6 +53,9 @@ class HabitacliaScraper():
 
             html = self._descargar_url(url)
             parser = BeautifulSoup(html, 'html.parser')
+            if self._inmueble_no_disponible(parser):
+                self._logger.warning('El servidor indicó "inmueble no disponible". Se aborta la página')
+                return
 
             # Se obtienen de la URL
             housing_id = self._get_housing_id_by_url(url)
@@ -60,7 +63,8 @@ class HabitacliaScraper():
 
             # Se obtienen de la sección "summary"
             municipi = self._get_municipio(parser)
-            barri = self._get_barrio(parser)
+            provincia = self._get_provincia(parser)
+            zona = self._get_zona(parser)
             preuactual = self._get_precio(parser)
             superficie = self._get_superficie(html, parser)
             habitaciones = self._get_habitaciones(html, parser)
@@ -85,7 +89,8 @@ class HabitacliaScraper():
                                  'Url': url,
                                  'Tipus': tipus,
                                  'Municipi': municipi,
-                                 'Barri': barri,
+                                 'Provincia': provincia,
+                                 'Zona': zona,
                                  'Preu Actual (€)': preuactual,
                                  'Superfície (m2)': superficie,
                                  '#Habitacions': habitaciones,
@@ -105,6 +110,9 @@ class HabitacliaScraper():
         except Exception as ex:
             self._logger.error("Error en el data scraping " + str(ex))
 
+    def _inmueble_no_disponible(self, parser: BeautifulSoup):
+        return len(parser.select('.imagen-no-disponible302')) > 0
+
     def _fotocasa_id(self, url: str):
         url = url.replace('https://www.habitaclia.com/', '')
         return url.lower().startswith('fa')
@@ -119,7 +127,7 @@ class HabitacliaScraper():
                     return o.strip()
             return None
         except Exception as ex:
-            self._logger.error("Error obteniendo la etiqueta de eficiencia energética. Se devuelve ? " + str(ex))
+            self._logger.error("Error obteniendo la etiqueta de eficiencia energética. Se devuelve None " + str(ex))
             return None
 
     def _get_eti_emissions(self, parser: BeautifulSoup):
@@ -132,7 +140,7 @@ class HabitacliaScraper():
                     return o.strip()
             return None
         except Exception as ex:
-            self._logger.error("Error obteniendo la etiqueta de emisiones. Se devuelve ? " + str(ex))
+            self._logger.error("Error obteniendo la etiqueta de emisiones. Se devuelve None " + str(ex))
             return None
 
     def _get_antiguedad(self, parser: BeautifulSoup):
@@ -148,7 +156,7 @@ class HabitacliaScraper():
                     return planta
             return None
         except Exception as ex:
-            self._logger.error("Error obteniendo la antigüedad. Se devuelve ? " + str(ex))
+            self._logger.error("Error obteniendo la antigüedad. Se devuelve None " + str(ex))
             return None
 
     def _get_planta(self, parser: BeautifulSoup):
@@ -164,7 +172,7 @@ class HabitacliaScraper():
                     return planta
             return None
         except Exception as ex:
-            self._logger.error("Error obteniendo la planta. Se devuelve ? " + str(ex))
+            self._logger.error("Error obteniendo la planta. Se devuelve None " + str(ex))
             return None
 
     def _general_feature_exists(self, feature: str, parser: BeautifulSoup):
@@ -243,15 +251,49 @@ class HabitacliaScraper():
             raise
 
     def _get_municipio(self, parser: BeautifulSoup):
-        # v1 només Bcn:
-        return 'Barcelona'
+        try:
+            s = ''
+            ltags = parser.select('#js-nom-pob-busacador')
+            if len(ltags) > 0:
+                s = ltags[0].get('value')
+            else:
+                ltags = parser.select('#js-nom-pob-buscador')
+                if len(ltags) > 0:
+                    s = ltags[0].get('value')
+            return s
+        except Exception as ex:
+            self._logger.error("Error obteniendo el municipio. Se devuelve '' " + str(ex))
+            return ''
 
-    def _get_barrio(self, parser: BeautifulSoup):
+    def _get_provincia(self, parser: BeautifulSoup):
+        try:
+            s = ''
+            ltags = parser.select('#js-nom-prov-buscador')
+            if len(ltags) > 0:
+                s = ltags[0].get('value')
+            return s
+        except Exception as ex:
+            self._logger.error("Error obteniendo la provincia. Se devuelve None " + str(ex))
+            return None
+
+    def _get_zona(self, parser: BeautifulSoup):
         try:
             s = parser.select("article.location h4 a")[0].text.strip()
             return s
         except Exception as ex:
-            self._logger.error("Error obteniendo el barrio. Se devuelve ? " + str(ex))
+            self._logger.error("Error obtniendo la zona por article.location. Se intenta con id_buscador " + str(ex))
+            s = self._get_zona_by_buscador_input(parser)
+            return s
+
+    def _get_zona_by_buscador_input(self, parser: BeautifulSoup):
+        try:
+            s = ''
+            ltags = parser.select('#js-nom-zona-buscador')
+            if len(ltags) > 0:
+                s = ltags[0].get('value')
+            return s
+        except Exception as ex:
+            self._logger.error("Error obteniendo la zona por id_buscador. Se devuelve None " + str(ex))
             return None
 
     def _get_precio(self, parser: BeautifulSoup):
@@ -260,7 +302,7 @@ class HabitacliaScraper():
             s = s.replace('€', '').replace('.', '').strip()
             return s
         except Exception as ex:
-            self._logger.error("Error obteniendo el precio. Se devuelve ? " + str(ex))
+            self._logger.error("Error obteniendo el precio. Se devuelve None " + str(ex))
             return None
 
     def _get_superficie(self, html: str, parser: BeautifulSoup):
@@ -269,7 +311,7 @@ class HabitacliaScraper():
             s = s.lower().replace('desde', '').strip()
             return s
         except Exception as ex:
-            self._logger.error("Error obteniendo la superficie. Se devuelve ? " + str(ex))
+            self._logger.error("Error obteniendo la superficie. Se devuelve None " + str(ex))
             return None
 
     def _get_habitaciones(self, html: str, parser: BeautifulSoup):
@@ -277,7 +319,7 @@ class HabitacliaScraper():
             s = self._get_feature(html, parser, 'hab.')
             return s
         except Exception as ex:
-            self._logger.error("Error obteniendo el número de habitaciones. Se devuelve ? " + str(ex))
+            self._logger.error("Error obteniendo el número de habitaciones. Se devuelve None " + str(ex))
             return None
 
     def _get_baños(self, html: str, parser: BeautifulSoup):
@@ -289,7 +331,7 @@ class HabitacliaScraper():
                 s = None
             return s
         except Exception as ex:
-            self._logger.error("Error obteniendo el número de baños. Se devuelve ? " + str(ex))
+            self._logger.error("Error obteniendo el número de baños. Se devuelve None " + str(ex))
             return None
 
     def _get_feature(self, html: str, parser: BeautifulSoup, ends_with: str):
@@ -307,7 +349,6 @@ class HabitacliaScraper():
     def _get_total_index_pages(self, html):
         parser = BeautifulSoup(html, 'html.parser')
         paginator = parser.select(".pagination ul li")
-        print(paginator)
         paginator.reverse()
         last_page_tag = paginator[2]
         last_page = last_page_tag.select("a")[0].text
