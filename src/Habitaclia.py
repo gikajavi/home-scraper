@@ -69,29 +69,17 @@ class HabitacliaScraper():
             # Se obtienen de "Características generales"
             antiguedad = self._get_antiguedad(parser)
             planta = self._get_planta(parser)
-            parking = False
-            if self._general_feature_exists("Plaza parking", parser):
-                parking = True
-            calefaccio = False
-            if self._general_feature_exists("Calefacción", parser):
-                calefaccio = True
-            aire_acondicionat = False
-            if self._general_feature_exists("Aire acondicionado", parser):
-                aire_acondicionat = True
-            moblat = True
-            if self._general_feature_exists("Sin amueblar", parser):
-                moblat = False
+            parking = self._general_feature_exists("Plaza parking", parser)
+            calefaccio = self._general_feature_exists("Calefacción", parser)
+            aire_acondicionat = self._general_feature_exists("Aire acondicionado", parser)
+            moblat = self._general_feature_exists("Sin amueblar", parser)
             # Etiquetat eficiència energètica i d'emissions
             eti_consum = self._get_eti_eficiencia(parser)
             eti_emissions = self._get_eti_emissions(parser)
 
             # Se obtienen de "Equipamiento comunitario"
-            jardi = False
-            if self._community_feature_exists("Jardín", parser):
-                jardi = True
-            ascensor = False
-            if self._community_feature_exists("Ascensor", parser):
-                ascensor = True
+            jardi = self._community_feature_exists("Jardín", parser)
+            ascensor = self._community_feature_exists("Ascensor", parser)
 
             df_row = pd.DataFrame({'Id': housing_id,
                                  'Url': url,
