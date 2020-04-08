@@ -3,12 +3,15 @@ from Habitaclia import HabitacliaScraper
 scraper = HabitacliaScraper()
 # Scraping habitatges en lloguer d'una llista de indexos per regions (per exemple comarques)
 # Lloguers Barcelonés i comarques adjacents (Maresme, Baix Llobregat i els dos Vallès)
-# llista = ['https://www.habitaclia.com/alquiler-en-barcelones.htm',
-#           'https://www.habitaclia.com/alquiler-en-valles_occidental.htm',
-#           'https://www.habitaclia.com/alquiler-en-valles_oriental.htm',
-#           'https://www.habitaclia.com/alquiler-en-baix_llobregat.htm',
-#           'https://www.habitaclia.com/alquiler-en-maresme.htm']
-# scraper.start(llista)
+llista = ['https://www.habitaclia.com/alquiler-en-barcelones.htm',
+          'https://www.habitaclia.com/alquiler-en-valles_occidental.htm',
+          'https://www.habitaclia.com/alquiler-en-valles_oriental.htm',
+          'https://www.habitaclia.com/alquiler-en-baix_llobregat.htm',
+          'https://www.habitaclia.com/alquiler-en-maresme.htm']
+scraper.start(llista)
+# Generar el CSV un cop s'hagi fet el scraping desitjat
+scraper.write_to_csv('dataset.csv')
+
 
 # Scraping de vivendes a la venda al Garraf
 # llista = ['https://www.habitaclia.com/comprar-vivienda-en-garraf/provincia_barcelona/listainmuebles.htm']
@@ -23,7 +26,7 @@ scraper = HabitacliaScraper()
 # scraper.scrap_index_page("https://www.habitaclia.com/alquiler-barcelona.htm")
 # scraper.scrap_index_page("https://www.habitaclia.com/alquiler-barcelona-2.htm")
 # Pàgina 1 de barcelona tant comprar com lloguer
-scraper.scrap_index_page("https://www.habitaclia.com/viviendas-en-barcelones.htm")
+# scraper.scrap_index_page("https://www.habitaclia.com/viviendas-en-barcelones.htm")
 
 
 # Exemples per ofertes individuals
@@ -34,4 +37,4 @@ scraper.scrap_index_page("https://www.habitaclia.com/viviendas-en-barcelones.htm
 
 
 # Generar el CSV un cop s'hagi fet el scraping desitjat
-scraper.write_to_csv('dataset.csv')
+# scraper.write_to_csv('dataset.csv')
