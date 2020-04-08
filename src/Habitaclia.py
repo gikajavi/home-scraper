@@ -78,7 +78,7 @@ class HabitacliaScraper():
             provincia = self._get_provincia(parser)
             zona = self._get_zona(parser)
             preuactual = self._get_precio(parser)
-            datapreu = datetime.today().strftime('%d-%m-%Y')
+            datapreu = datetime.datetime.today().strftime('%d-%m-%Y')
             superficie = self._get_superficie(html, parser)
             habitaciones = self._get_habitaciones(html, parser)
             baños = self._get_baños(html, parser)
