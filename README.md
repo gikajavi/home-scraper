@@ -21,9 +21,6 @@ Habitatges en règim de lloguer a l'àrea de Barcelona
 Llistat d’habitatges en règim de lloguer als municipis de l’àrea de Barcelona (Barcelona i rodalies) 
 per poder fer estudis comparatius segons diferents criteris
 
-## Representació gràfica
-TODO
-
 ## Camps del CSV
 
 - Id: Identificador de l'habitatge 
@@ -51,20 +48,3 @@ TODO
 
 Cal tenir en compte que no tots els habitatges disposen de tots els camps d'informació. Per aquells camps dels quals no es disposa d'alguna 
 dada el valor reportat és un valor buit o ''.
-
-## Agraïments
-TODO
-
-## Inspiració / possibles aplicacions
-1. Estudi de diferències de preu / m2 entre municipis, barris, districtes o zones, antiguitat, prestacions, ...
-2. Evolució preu / m2 (en el context de vàries extraccions en diferents moments) classificant per municipi, antiguitat, etc. Això 
-es podria fer obtenint datasets en diferents moments. El scraping contempla la dada 'data' per a tal fi
-3. Increment mig de preu en els habitatges que disposen de parking i/o altres criteris
-
-
-
-
-
- 
-
-
