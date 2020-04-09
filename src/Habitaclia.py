@@ -1,7 +1,7 @@
 import pandas as pd
 import random
-import log_helper
-import http_helper
+import log_helper  # Capa de la llibreria logging
+import http_helper  # Helper de requests HTTP per implementar espaiat de peticions (retards exponencials)
 import datetime
 from bs4 import BeautifulSoup
 
@@ -387,7 +387,7 @@ class HabitacliaScraper():
         return html
 
     def _descargar_url(self, url):
-        html = self._http_client.get(url)
+        html = self._http_client.get(url)  # <- L'objecte _http_client s'encarrega de la gestió d'errors i espaiat de peticions
         return html
 
     def write_to_csv(self, filename):
