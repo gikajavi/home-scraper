@@ -4,6 +4,10 @@ Alumnes:
 - Marc Serra Suñol
 - Javier Beltran Lou
 
+## Descripció dels fitxers
+- A la carpeta [./src](./src) hi ha el codi font de la solució. Veure la wiki de la carpeta per una descripció dels fitxers font.
+- A la carpeta [./pdf](./pdf) hi ha el fitxer Respostes.pdf amb les respostes a les preguntes.
+ 
 ## Web Scraper de sites amb informació sobre lloguers d'habitatges
 ## Context
 La idea d'aquest Web Scraper és la d'obtenir un Dataset d'informació sobre lloguers d'habitatges a la zona de Barcelona i rodalies, tot i que es pot fer 
