@@ -6,7 +6,7 @@ Alumnes:
 
 ## Descripció dels fitxers
 - A la carpeta [./src](./src) hi ha el codi font de la solució. Veure la wiki de la carpeta per una descripció dels fitxers font.
-- A la carpeta [./pdf](./pdf) hi ha el fitxer Respostes.pdf amb les respostes a les preguntes.
+- A la carpeta [./pdf](./pdf) hi ha el fitxer [Respostes.pdf](./pdf/Respostes.pdf) amb les respostes a les preguntes.
  
 ## Web Scraper de sites amb informació sobre lloguers d'habitatges
 ## Context
